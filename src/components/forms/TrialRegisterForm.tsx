@@ -27,7 +27,7 @@ const trialSchema = z.object({
     .regex(/^(0[3|5|7|8|9])+([0-9]{8})$/, "Số điện thoại không hợp lệ"),
   studentName: z.string().min(2, "Vui lòng nhập họ tên học viên"),
   studentBirthYear: z
-    .number({ message: "Năm sinh không hợp lệ" })
+    .coerce.number({ error: "Năm sinh không hợp lệ" })
     .min(2006, "Năm sinh không hợp lệ")
     .max(2021, "Năm sinh không hợp lệ"),
   preferredCourt: z.string().min(1, "Vui lòng chọn sân"),
@@ -35,6 +35,7 @@ const trialSchema = z.object({
 });
 
 type TrialFormValues = z.infer<typeof trialSchema>;
+type TrialFormInput = z.input<typeof trialSchema>;
 
 export default function TrialRegisterForm() {
   const { data: courts = [] } = useCourts();
@@ -46,7 +47,7 @@ export default function TrialRegisterForm() {
     reset,
     setValue,
     formState: { errors },
-  } = useForm<TrialFormValues>({
+  } = useForm<TrialFormInput, unknown, TrialFormValues>({
     resolver: zodResolver(trialSchema),
     defaultValues: {
       parentName: "",
