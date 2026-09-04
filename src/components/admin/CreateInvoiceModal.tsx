@@ -9,6 +9,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAdminStudents } from "@/hooks/useAdmin";
 
 interface InvoiceFormData {
   student_id: string;
@@ -25,11 +27,12 @@ interface CreateInvoiceModalProps {
 }
 
 export default function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceModalProps) {
+  const { students } = useAdminStudents();
   const [studentId, setStudentId] = useState("");
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState("1200000");
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
-  const [dueDate, setDueDate] = useState("");
+  const [dueDate, setDueDate] = useState(new Date(Date.now() + 10 * 86400000).toISOString().split("T")[0]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,14 +56,19 @@ export default function CreateInvoiceModal({ isOpen, onClose, onSubmit }: Create
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label>Mã Học Viên</Label>
-            <Input 
-              required
-              value={studentId}
-              onChange={(e) => setStudentId(e.target.value)}
-              placeholder="VD: student-uuid" 
-              className="bg-[#0F1B33] border-white/10 text-white" 
-            />
+            <Label>Chọn Học Viên *</Label>
+            <Select value={studentId} onValueChange={(val) => setStudentId(val || "")}>
+              <SelectTrigger className="bg-[#0F1B33] border-white/10 text-white">
+                <SelectValue placeholder="-- Chọn học viên cần tạo hóa đơn --" />
+              </SelectTrigger>
+              <SelectContent className="bg-[#1B2A4A] border-white/10 text-white max-h-60">
+                {students.map((st) => (
+                  <SelectItem key={st.id} value={st.id} className="text-white hover:bg-white/10">
+                    {st.name} {st.birthYear ? `(${st.birthYear})` : ""} - {st.className || "Chưa xếp lớp"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
           <div className="grid grid-cols-2 gap-4">
@@ -113,7 +121,7 @@ export default function CreateInvoiceModal({ isOpen, onClose, onSubmit }: Create
             <Button type="button" variant="ghost" onClick={onClose} className="hover:bg-white/5">
               Hủy
             </Button>
-            <Button type="submit" className="bg-orange hover:bg-orange/90 text-white">
+            <Button type="submit" disabled={!studentId} className="bg-orange hover:bg-orange/90 text-white disabled:opacity-50">
               Tạo hóa đơn
             </Button>
           </DialogFooter>

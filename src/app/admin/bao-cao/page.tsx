@@ -37,7 +37,50 @@ export default function AdminReportsPage() {
   const [reportYear, setReportYear] = useState("2024-2025");
 
   const handleExportReport = () => {
-    toast.success("Hệ thống đang xuất file báo cáo tổng hợp PDF/Excel...");
+    try {
+      const enroll = enrollmentData.length > 0 ? enrollmentData : monthlyEnrollment;
+      const dist = distributionData.length > 0 ? distributionData : classDistribution;
+      const coaches = coachStatsData.length > 0 ? coachStatsData : coachPerformance;
+
+      // Build CSV content with UTF-8 BOM for Vietnamese Excel compatibility
+      let csvContent = "\uFEFF";
+      csvContent += `BÁO CÁO THỐNG KÊ TỔNG HỢP - OCEAN BASKETBALL (${reportYear})\n`;
+      csvContent += `Ngày xuất: ${new Date().toLocaleDateString("vi-VN")}\n\n`;
+
+      csvContent += "1. TÌNH HÌNH TUYỂN SINH & HỌC THỬ THEO THÁNG\n";
+      csvContent += "Tháng,Học viên mới,Học thử\n";
+      enroll.forEach((item: any) => {
+        csvContent += `"${item.name || ""}",${item["Học viên mới"] ?? 0},${item["Học thử"] ?? 0}\n`;
+      });
+      csvContent += "\n";
+
+      csvContent += "2. PHÂN BỔ LỚP HỌC THEO CỤM SÂN\n";
+      csvContent += "Cụm sân,Số lớp\n";
+      dist.forEach((item: any) => {
+        csvContent += `"${item.name || ""}",${item["Số lớp"] ?? 0}\n`;
+      });
+      csvContent += "\n";
+
+      csvContent += "3. TỈ LỆ CHUYÊN CẦN THEO HUẤN LUYỆN VIÊN\n";
+      csvContent += "Huấn luyện viên,Chuyên cần (%)\n";
+      coaches.forEach((item: any) => {
+        csvContent += `"${item.name || ""}",${item["Chuyên cần (%)"] ?? 0}%\n`;
+      });
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const cleanYear = reportYear.replace(/[\s-]+/g, "_");
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute("download", `BaoCao_OceanBasketball_${cleanYear}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success(`Đã xuất và tải báo cáo ${reportYear} thành công!`);
+    } catch (err) {
+      console.error("Export error:", err);
+      toast.error("Có lỗi xảy ra khi xuất báo cáo!");
+    }
   };
 
   return (

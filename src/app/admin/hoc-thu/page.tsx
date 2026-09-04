@@ -24,13 +24,19 @@ export default function AdminTrialPage() {
   const [isConvertOpen, setIsConvertOpen] = useState(false);
 
   const handleApprove = (id: string, name: string) => {
-    updateStatus(id, "approved");
-    toast.success(`Đã phê duyệt hồ sơ học thử của ${name}`);
+    updateStatus(id, "approved", {
+      onSuccess: () => {
+        toast.success(`Đã phê duyệt hồ sơ học thử của ${name}`);
+      },
+    });
   };
 
   const handleReject = (id: string, name: string) => {
-    updateStatus(id, "rejected");
-    toast.error(`Đã từ chối hồ sơ học thử của ${name}`);
+    updateStatus(id, "rejected", {
+      onSuccess: () => {
+        toast.info(`Đã từ chối hồ sơ học thử của ${name}`);
+      },
+    });
   };
 
   const handleOpenConvert = (reg: TrialRegistration) => {
@@ -40,9 +46,12 @@ export default function AdminTrialPage() {
 
   const handleConvertConfirm = () => {
     if (selectedReg) {
-      updateStatus(selectedReg.id, "converted");
-      toast.success(`Đã chuyển học viên học thử ${selectedReg.studentName} thành học viên chính thức!`);
-      setIsConvertOpen(false);
+      updateStatus(selectedReg.id, "converted", {
+        onSuccess: () => {
+          toast.success(`Đã chuyển học viên học thử ${selectedReg.studentName} thành học viên chính thức!`);
+          setIsConvertOpen(false);
+        },
+      });
     }
   };
 

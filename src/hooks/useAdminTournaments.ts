@@ -21,7 +21,7 @@ export function useAdminTournaments() {
       queryClient.invalidateQueries({ queryKey });
       toast.success("Đã thêm giải đấu mới");
     },
-    onError: () => toast.error("Có lỗi xảy ra khi thêm giải đấu"),
+    onError: (err: any) => toast.error(err?.response?.data?.error || "Có lỗi xảy ra khi thêm giải đấu"),
   });
 
   const updateTournament = useMutation({
@@ -30,7 +30,7 @@ export function useAdminTournaments() {
       queryClient.invalidateQueries({ queryKey });
       toast.success("Đã cập nhật giải đấu");
     },
-    onError: () => toast.error("Có lỗi xảy ra khi cập nhật giải đấu"),
+    onError: (err: any) => toast.error(err?.response?.data?.error || "Có lỗi xảy ra khi cập nhật giải đấu"),
   });
 
   const deleteTournament = useMutation({
@@ -39,7 +39,7 @@ export function useAdminTournaments() {
       queryClient.invalidateQueries({ queryKey });
       toast.success("Đã xóa giải đấu");
     },
-    onError: () => toast.error("Có lỗi xảy ra khi xóa giải đấu"),
+    onError: (err: any) => toast.error(err?.response?.data?.error || "Có lỗi xảy ra khi xóa giải đấu"),
   });
 
   return {

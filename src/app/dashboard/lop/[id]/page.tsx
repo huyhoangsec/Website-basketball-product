@@ -1,24 +1,18 @@
-import { Metadata } from "next";
-import { getClasses, getStudents } from "@/lib/api-fetch";
+"use client";
+
+import { use } from "react";
+import { useQuery } from "@tanstack/react-query";
+import api from "@/lib/api";
 import StudentList from "@/components/coach-dashboard/StudentList";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Users, CalendarRange, Clock, ArrowLeft, ClipboardCheck, ArrowRight } from "lucide-react";
+import { MapPin, Users, CalendarRange, Clock, ArrowLeft, ClipboardCheck, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { ClassInfo, Student } from "@/types";
 
 interface ClassDetailPageProps {
   params: Promise<{ id: string }>;
-}
-
-export async function generateMetadata({ params }: ClassDetailPageProps): Promise<Metadata> {
-  const { id } = await params;
-  const classesData = await getClasses();
-  const classItem = classesData.find((c) => c.id === id);
-  return {
-    title: classItem ? `${classItem.name} | Chi tiết lớp học` : "Chi tiết lớp học",
-  };
 }
 
 const getDayName = (day: number) => {
@@ -26,18 +20,36 @@ const getDayName = (day: number) => {
   return days[day];
 };
 
-export default async function ClassDetailPage({ params }: ClassDetailPageProps) {
-  const { id } = await params;
-  const classesData = await getClasses();
-  const classItem = classesData.find((c) => c.id === id);
+export default function ClassDetailPage({ params }: ClassDetailPageProps) {
+  const { id } = use(params);
 
-  if (!classItem) {
-    notFound();
+  // Fetch class details
+  const { data: classItem, isLoading: loadingClass } = useQuery<ClassInfo>({
+    queryKey: ["class", id],
+    queryFn: async () => {
+      const res = await api.get(`/public/classes`);
+      const classes = res.data;
+      return classes.find((c: { id: string }) => c.id === id);
+    },
+  });
+
+  // Fetch students belonging to this class directly from coach API
+  const { data: classStudents = [], isLoading: loadingStudents } = useQuery<Student[]>({
+    queryKey: ["class-students", id],
+    queryFn: async () => {
+      const res = await api.get(`/coach/classes/${id}/students`);
+      return res.data || [];
+    },
+  });
+
+  if (loadingClass || !classItem) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 text-navy space-y-3">
+        <Loader2 className="h-8 w-8 animate-spin text-orange" />
+        <span className="text-sm font-semibold">Đang tải thông tin lớp học...</span>
+      </div>
+    );
   }
-
-  // Filter students belonging to this class
-  const studentsData = await getStudents();
-  const classStudents = studentsData.filter((s) => s.classId === id);
 
   return (
     <div className="space-y-6">
@@ -91,9 +103,16 @@ export default async function ClassDetailPage({ params }: ClassDetailPageProps) 
         {/* Class roster - spans 2 cols */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-bold text-navy">Danh sách học viên</h3>
+            <h3 className="text-base font-bold text-navy">Danh sách học viên ({classStudents.length})</h3>
           </div>
-          <StudentList students={classStudents} />
+          {loadingStudents ? (
+            <div className="flex items-center justify-center p-8 bg-white rounded-xl border border-border">
+              <Loader2 className="h-6 w-6 animate-spin text-orange mr-2" />
+              <span className="text-xs text-muted-foreground">Đang tải danh sách học viên...</span>
+            </div>
+          ) : (
+            <StudentList students={classStudents} />
+          )}
         </div>
 
         {/* Schedule & info sidebar widget */}
@@ -116,18 +135,22 @@ export default async function ClassDetailPage({ params }: ClassDetailPageProps) 
                   Lịch học cố định
                 </p>
                 <div className="space-y-1.5">
-                  {classItem.schedule?.map((sched, idx) => (
-                    <div key={idx} className="flex justify-between items-center text-xs border-b border-slate-50 last:border-b-0 pb-1.5 last:pb-0">
-                      <span className="font-semibold text-navy flex items-center gap-1">
-                        <CalendarRange className="h-3.5 w-3.5 text-orange" />
-                        {getDayName(sched.dayOfWeek)}
-                      </span>
-                      <span className="text-muted-foreground font-medium flex items-center gap-1">
-                        <Clock className="h-3 w-3 text-orange" />
-                        {sched.startTime} - {sched.endTime}
-                      </span>
-                    </div>
-                  ))}
+                  {classItem.schedule && classItem.schedule.length > 0 ? (
+                    classItem.schedule.map((sched, idx) => (
+                      <div key={idx} className="flex justify-between items-center text-xs border-b border-slate-50 last:border-b-0 pb-1.5 last:pb-0">
+                        <span className="font-semibold text-navy flex items-center gap-1">
+                          <CalendarRange className="h-3.5 w-3.5 text-orange" />
+                          {getDayName(sched.dayOfWeek)}
+                        </span>
+                        <span className="text-muted-foreground font-medium flex items-center gap-1">
+                          <Clock className="h-3 w-3 text-orange" />
+                          {sched.startTime} - {sched.endTime}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic">Chưa có lịch học</p>
+                  )}
                 </div>
               </div>
 

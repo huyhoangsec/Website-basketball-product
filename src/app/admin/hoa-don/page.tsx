@@ -20,11 +20,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Receipt, CheckCircle, Clock } from "lucide-react";
-import { useAdminInvoices, Invoice } from "@/hooks/useAdmin";
+import { useAdminInvoices, useAdminStudents, Invoice } from "@/hooks/useAdmin";
 import { formatVND } from "@/lib/utils";
 
 export default function AdminInvoicesPage() {
   const { invoices, isLoading, createInvoice, payInvoice } = useAdminInvoices();
+  const { students } = useAdminStudents();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPayOpen, setIsPayOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
@@ -190,14 +191,19 @@ export default function AdminInvoicesPage() {
 
             <div className="grid gap-4 py-4 text-slate-700 text-sm">
               <div className="space-y-1">
-                <Label htmlFor="student-id" className="text-xs font-bold text-navy">ID Học viên *</Label>
-                <Input
-                  id="student-id"
-                  value={studentId}
-                  onChange={(e) => setStudentId(e.target.value)}
-                  placeholder="Nhập UUID của học viên"
-                  required
-                />
+                <Label htmlFor="student-id" className="text-xs font-bold text-navy">Chọn Học viên *</Label>
+                <Select value={studentId} onValueChange={(val) => setStudentId(val || "")}>
+                  <SelectTrigger id="student-id" className="border-slate-200">
+                    <SelectValue placeholder="-- Chọn học viên cần tạo hóa đơn --" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-border max-h-60">
+                    {students.map((st) => (
+                      <SelectItem key={st.id} value={st.id}>
+                        {st.name} {st.birthYear ? `(${st.birthYear})` : ""} - {st.className || "Chưa xếp lớp"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

@@ -23,15 +23,19 @@ export function useAdminTrials() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
     },
-    onError: () => {
-      toast.error("Có lỗi xảy ra khi cập nhật trạng thái");
+    onError: (err: any) => {
+      const msg = err?.response?.data?.error || "Có lỗi xảy ra khi cập nhật trạng thái";
+      toast.error(msg);
     }
   });
 
 	return {
 		trials,
 		isLoading,
-		updateStatus: (id: string, status: "approved" | "rejected" | "converted") => updateStatusMutation.mutate({ id, status }),
+		updateStatus: (id: string, status: "approved" | "rejected" | "converted", options?: { onSuccess?: () => void }) =>
+			updateStatusMutation.mutate({ id, status }, options),
+		updateStatusAsync: (id: string, status: "approved" | "rejected" | "converted") =>
+			updateStatusMutation.mutateAsync({ id, status }),
 	};
 }
 
@@ -68,8 +72,9 @@ export function useAdminInvoices() {
 			queryClient.invalidateQueries({ queryKey });
 			toast.success("Đã tạo hóa đơn mới");
 		},
-		onError: () => {
-			toast.error("Lỗi khi tạo hóa đơn");
+		onError: (err: any) => {
+			const msg = err?.response?.data?.error || "Lỗi khi tạo hóa đơn";
+			toast.error(msg);
 		}
 	});
 
@@ -82,8 +87,9 @@ export function useAdminInvoices() {
 			queryClient.invalidateQueries({ queryKey });
 			toast.success("Đã thanh toán hóa đơn");
 		},
-		onError: () => {
-			toast.error("Lỗi khi thanh toán hóa đơn");
+		onError: (err: any) => {
+			const msg = err?.response?.data?.error || "Lỗi khi thanh toán hóa đơn";
+			toast.error(msg);
 		}
 	});
 
@@ -96,8 +102,9 @@ export function useAdminInvoices() {
 			queryClient.invalidateQueries({ queryKey });
 			toast.success(`Đã tự động tạo ${data.count} hóa đơn`);
 		},
-		onError: () => {
-			toast.error("Lỗi khi tạo hóa đơn hàng tháng");
+		onError: (err: any) => {
+			const msg = err?.response?.data?.error || "Lỗi khi tạo hóa đơn hàng tháng";
+			toast.error(msg);
 		}
 	});
 
@@ -258,8 +265,9 @@ export function useAdminStudents() {
       queryClient.invalidateQueries({ queryKey });
       toast.success("Đã thêm mới học viên");
     },
-    onError: () => {
-      toast.error("Lỗi khi thêm mới học viên");
+    onError: (err: any) => {
+      const msg = err?.response?.data?.error || "Lỗi khi thêm mới học viên";
+      toast.error(msg);
     }
   });
 
@@ -272,8 +280,9 @@ export function useAdminStudents() {
       queryClient.invalidateQueries({ queryKey });
       toast.success("Đã cập nhật học viên");
     },
-    onError: () => {
-      toast.error("Lỗi khi cập nhật học viên");
+    onError: (err: any) => {
+      const msg = err?.response?.data?.error || "Lỗi khi cập nhật học viên";
+      toast.error(msg);
     }
   });
 
