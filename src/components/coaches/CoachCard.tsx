@@ -11,9 +11,22 @@ interface CoachCardProps {
   index: number;
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://url-backend-cua-ban.onrender.com";
+
+// Hàm xử lý nối Domain Backend vào đường dẫn ảnh tương đối
+const getImageUrl = (path?: string, fallback: string = "") => {
+  if (!path) return fallback;
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  return `${API_URL}${path.startsWith("/") ? "" : "/"}${path}`;
+};
+
 export default function CoachCard({ coach, index }: CoachCardProps) {
   const defaultImg = `/images/img${(index % 4) + 2}.jpg`;
-  const [imgSrc, setImgSrc] = useState(coach.avatar || defaultImg);
+  
+  // Khởi tạo state bằng URL hoàn chỉnh đã được qua hàm getImageUrl
+  const [imgSrc, setImgSrc] = useState(() => 
+    coach.avatar ? getImageUrl(coach.avatar, defaultImg) : defaultImg
+  );
 
   return (
     <motion.div
